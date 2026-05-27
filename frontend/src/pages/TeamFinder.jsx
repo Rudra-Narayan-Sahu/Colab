@@ -1,323 +1,182 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
-import Sidebar from '../components/Sidebar';
-import { 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
-  Plus, 
-  CheckCircle,
-  HelpCircle,
-  Clock,
-  ArrowRight
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Plus, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function TeamFinder() {
-  const { 
-    activeTeams, 
-    requestToJoin, 
-    setProjectModalOpen,
+  const {
     hackathons,
+    setProjectModalOpen,
     globalSearchQuery,
     setGlobalSearchQuery
   } = useApp();
 
   const searchQuery = globalSearchQuery;
-  const setSearchQuery = setGlobalSearchQuery;
-  const [selectedHackathon, setSelectedHackathon] = useState('All');
-  const [selectedRoles, setSelectedRoles] = useState([]);
-
-  const toggleRoleFilter = (role) => {
-    if (selectedRoles.includes(role)) {
-      setSelectedRoles(prev => prev.filter(r => r !== role));
-    } else {
-      setSelectedRoles(prev => [...prev, role]);
-    }
-  };
-
-  const clearFilters = () => {
-    setSelectedHackathon('All');
-    setSelectedRoles([]);
-    setSearchQuery('');
-  };
-
-  const filteredTeams = activeTeams.filter(team => {
-    const matchesSearch = searchQuery === '' || 
-      team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    const matchesHackathon = selectedHackathon === 'All' || 
-      team.hackathon.toLowerCase().includes(selectedHackathon.toLowerCase()) ||
-      selectedHackathon.toLowerCase().includes(team.hackathon.toLowerCase());
-
-    const matchesRoles = selectedRoles.length === 0 || 
-      team.rolesNeeded.some(role => selectedRoles.some(selRole => role.toLowerCase().includes(selRole.toLowerCase())));
-
-    return matchesSearch && matchesHackathon && matchesRoles;
-  });
+  const visibleHackathons = hackathons.filter((hack) =>
+    searchQuery === '' ||
+    [hack.title, hack.description, hack.category, hack.status]
+      .join(' ')
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen bg-[#f0f0f0] flex font-sans text-slate-900">
-      <Sidebar />
-
-      {/* Main Container */}
-      <main className="flex-1 lg:pl-64 min-w-0 pb-16">
-        
-        {/* Header Panel */}
-        <header className="bg-white border-b-[3px] border-slate-900 sticky top-0 z-30 px-6 sm:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500 capitalize uppercase">Explore</span>
-            <span className="text-slate-400 font-bold">/</span>
-            <span className="text-xs font-extrabold text-slate-900 uppercase">Team Finder</span>
-          </div>
-
-          <button
-            onClick={() => setProjectModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl border-2 border-slate-900 shadow-[3px_3px_0px_#000] hover:shadow-[1px_1px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[3px]" />
-            Create Team Post
-          </button>
-        </header>
-
-        {/* Content Pane */}
-        <div className="max-w-5xl mx-auto px-6 sm:px-8 pt-8 space-y-8">
-          
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight uppercase">Find Your Next Adventure</h1>
-              <p className="text-slate-600 text-xs font-bold uppercase tracking-wider mt-1">Connect with active student teams looking for collaborators.</p>
-            </div>
-            
-            <div className="flex gap-1.5">
-              <button className="p-2 border-2 border-slate-900 bg-white hover:bg-slate-100 rounded-xl text-slate-900 transition-colors shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#000] cursor-pointer">
-                <ChevronLeft className="w-4 h-4 stroke-[2.5px]" />
-              </button>
-              <button className="p-2 border-2 border-slate-900 bg-white hover:bg-slate-100 rounded-xl text-slate-900 transition-colors shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#000] cursor-pointer">
-                <ChevronRight className="w-4 h-4 stroke-[2.5px]" />
-              </button>
-            </div>
-          </div>
-
-          {/* Hackathons Quick Selection Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {hackathons.slice(0, 3).map((hack) => (
-              <div 
-                key={hack.id}
-                onClick={() => setSelectedHackathon(selectedHackathon === hack.title ? 'All' : hack.title)}
-                className={`cursor-pointer rounded-2xl p-5 border-2 border-slate-900 transition-all duration-200 flex flex-col justify-between h-32 ${
-                  selectedHackathon === hack.title 
-                    ? 'bg-amber-400 text-slate-900 shadow-[3px_3px_0px_#000]' 
-                    : 'bg-white hover:bg-slate-50 shadow-[4px_4px_0px_#000]'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${hack.iconBg} border border-slate-100/50`}>
-                    {hack.title.split(' ').map(w => w[0]).join('')}
-                  </div>
-                  <span className="text-[9px] font-extrabold px-2 py-0.5 bg-white border border-slate-900 text-slate-900 rounded-full tracking-wide shadow-[1px_1px_0px_#000]">
-                    Ends in {hack.endsIn}
-                  </span>
-                </div>
-                
-                <div>
-                  <h4 className="font-extrabold text-slate-900 text-xs uppercase">{hack.title}</h4>
-                  <div className="flex items-center gap-1 text-[10px] text-blue-600 font-extrabold mt-1">
-                    <span>Filter teams</span>
-                    <ArrowRight className="w-3.5 h-3.5 stroke-[2.5px]" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom Filter & Grid Area */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            {/* Simple Filters Panel (Col 3) */}
-            <div className="lg:col-span-3 space-y-4">
-              
-              <div className="bg-white rounded-2xl border-2 border-slate-900 p-5 shadow-[4px_4px_0px_#000] space-y-5">
-                <div>
-                  <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Filters</h3>
-                </div>
-
-                {/* Dropdown for Hackathons */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-600 block uppercase tracking-wide">Competition</label>
-                  <select 
-                    value={selectedHackathon}
-                    onChange={(e) => setSelectedHackathon(e.target.value)}
-                    className="w-full text-xs font-bold text-slate-900 bg-white border-2 border-slate-900 rounded-xl px-3 py-2.5 shadow-[2px_2px_0px_#000] focus:outline-none focus:bg-slate-50 transition-all cursor-pointer"
-                  >
-                    <option value="All">All Hackathons</option>
-                    {hackathons.map(hack => (
-                      <option key={hack.id} value={hack.title}>{hack.title}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Roles Needed Pill Selector */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-600 block uppercase tracking-wide">Looking for</label>
-                  
-                  <div className="flex flex-col gap-2">
-                    {['Frontend Developer', 'Backend Developer', 'UX Designer', 'Data Scientist'].map((role) => {
-                      const isSelected = selectedRoles.includes(role);
-                      return (
-                        <button
-                          key={role}
-                          onClick={() => toggleRoleFilter(role)}
-                          className={`text-left px-3 py-2 rounded-xl text-xs font-extrabold border-2 border-slate-900 shadow-[2px_2px_0px_#000] transition-all cursor-pointer ${
-                            isSelected 
-                              ? 'bg-amber-400 text-slate-900 shadow-[1px_1px_0px_#000]' 
-                              : 'bg-white text-slate-700 hover:bg-slate-100'
-                          }`}
-                        >
-                          {role}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Clear Filters */}
-                {(selectedHackathon !== 'All' || selectedRoles.length > 0 || searchQuery !== '') && (
-                  <button
-                    onClick={clearFilters}
-                    className="w-full py-2 bg-white border-2 border-slate-900 hover:bg-slate-100 text-slate-900 font-bold text-xs rounded-xl shadow-[3px_3px_0px_#000] hover:shadow-[1px_1px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
-                  >
-                    Reset Filters
-                  </button>
-                )}
-              </div>
-
-              {/* Start Your Own Team Card */}
-              <div className="bg-blue-600 rounded-2xl p-5 text-white border-2 border-slate-900 shadow-[4px_4px_0px_#000] relative overflow-hidden">
-                <h4 className="font-extrabold text-xs uppercase tracking-wide">Want to run your own team?</h4>
-                <p className="text-[10px] text-blue-100 mt-2 leading-relaxed font-semibold">
-                  Start your own project and invite builders to join your project.
-                </p>
-                <button
-                  onClick={() => setProjectModalOpen(true)}
-                  className="w-full mt-4 py-2 bg-white border-2 border-slate-900 hover:bg-slate-100 text-slate-900 font-extrabold text-xs rounded-xl shadow-[3px_3px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
-                >
-                  Post Project
-                </button>
-              </div>
-
-            </div>
-
-            {/* Teams Posts List Area (Col 9) */}
-            <div className="lg:col-span-9 space-y-4">
-              
-              {/* Search & Sort Panel */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-3 rounded-2xl border-2 border-slate-900 shadow-[4px_4px_0px_#000]">
-                {/* Search Bar Input */}
-                <div className="relative w-full sm:max-w-xs">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input 
-                    type="text" 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search teams or technologies..."
-                    className="w-full text-xs bg-white border-2 border-slate-900 rounded-xl pl-9 pr-4 py-2.5 shadow-[2px_2px_0px_#000] focus:outline-none focus:bg-slate-50 transition-all text-slate-900 font-bold"
-                  />
-                </div>
-
-                {/* Info Text */}
-                <div className="flex justify-between sm:justify-end items-center gap-4 w-full sm:w-auto text-xs pl-2 text-slate-500 font-bold uppercase tracking-wider">
-                  <span>
-                    Showing <span className="text-slate-900 font-black">{filteredTeams.length}</span> active team posts
-                  </span>
-                </div>
-              </div>
-
-              {/* Active Teams Posts Stack */}
+    <div className="min-h-screen bg-slate-950 text-white">
+      <main className="mx-auto max-w-7xl px-6 py-10">
+        <div className="flex flex-col gap-10">
+          <section className="space-y-6">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-4">
-                <AnimatePresence mode="popLayout">
-                  {filteredTeams.map((team, idx) => (
-                    <motion.div
-                      layout
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.15, delay: idx * 0.03 }}
-                      key={team.id}
-                      className="bg-white border-2 border-slate-900 rounded-2xl p-6 shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 flex flex-col md:flex-row justify-between gap-6 md:items-center"
-                    >
-                      {/* Left: Details */}
-                      <div className="space-y-2.5 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-sm font-extrabold text-slate-900 uppercase">
-                            {team.name}
-                          </h3>
-                          <span className="bg-white border border-slate-900 text-slate-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow-[1px_1px_0px_#000] uppercase tracking-wide">
-                            {team.hackathon}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-slate-600 leading-relaxed max-w-xl font-medium">
-                          {team.desc}
-                        </p>
-
-                        {/* Tech tags */}
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {team.tags.map((tag) => (
-                            <span 
-                              key={tag} 
-                              className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-amber-200 text-slate-900 border border-slate-900 shadow-[1px_1px_0px_#000] uppercase tracking-wider"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Right: Join Button & Time */}
-                      <div className="flex flex-col items-stretch md:items-end justify-between self-stretch shrink-0 md:border-l-2 md:border-slate-200 md:pl-6 min-w-[130px]">
-                        <span className="text-[10px] text-slate-500 font-bold flex items-center gap-1 mb-3 md:mb-0 justify-end uppercase tracking-wide">
-                          <Clock className="w-3.5 h-3.5 text-slate-400 stroke-[2.5px]" />
-                          {team.posted}
-                        </span>
-
-                        <button
-                          onClick={() => requestToJoin(team.id)}
-                          className={`px-4 py-2 text-xs font-extrabold rounded-xl border-2 border-slate-900 transition-all cursor-pointer ${
-                            team.requested 
-                              ? 'bg-slate-100 border-slate-900/50 text-slate-400 cursor-default shadow-none flex items-center justify-center gap-1' 
-                              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-[3px_3px_0px_#000] hover:shadow-[1px_1px_0px_#000] active:translate-x-[2px] active:translate-y-[2px]'
-                          }`}
-                        >
-                          {team.requested ? 'Request Sent' : 'Join Team'}
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
-
-                  {filteredTeams.length === 0 && (
-                    <motion.div 
-                      className="bg-white border-2 border-slate-900 rounded-2xl p-10 text-center shadow-[4px_4px_0px_#000]"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      <HelpCircle className="w-8 h-8 text-slate-500 mx-auto mb-3" />
-                      <h4 className="font-extrabold text-slate-800 text-xs uppercase">No active teams found</h4>
-                      <p className="text-slate-500 text-[11px] mt-1 max-w-xs mx-auto leading-relaxed font-semibold uppercase">
-                        Try clearing filters or search terms to see available opportunities.
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <p className="text-xs uppercase tracking-[0.4em] text-red-400 font-black">Hackathon Arena</p>
+                <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tight leading-tight">Bold events for builders</h1>
+                <p className="max-w-2xl text-sm text-slate-300 font-medium leading-relaxed">
+                  Explore the latest hackathons with premium energy, fast-moving prize pools and teams ready to ship.
+                </p>
               </div>
 
+              <button
+                onClick={() => setProjectModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-[1.2rem] border-2 border-white bg-red-600 px-6 py-3 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[10px_10px_0px_#000] transition hover:bg-red-500 active:translate-x-[2px] active:translate-y-[2px]"
+              >
+                <Plus className="w-4 h-4 stroke-[3px]" />
+                Create Team
+              </button>
             </div>
 
-          </div>
+            <div className="grid gap-4 sm:grid-cols-[1.8fr_1fr]">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setGlobalSearchQuery(e.target.value)}
+                  placeholder="Search hackathons, categories, teams..."
+                  className="w-full rounded-[2rem] border-2 border-white bg-slate-950/60 px-12 py-3 text-sm font-bold text-white outline-none transition focus:border-red-500"
+                />
+              </div>
+              <div className="rounded-[2rem] border-2 border-white bg-white/5 px-6 py-3 text-sm font-black uppercase tracking-[0.18em] text-slate-200 flex items-center justify-between">
+                <span>{visibleHackathons.length} events</span>
+                <ArrowRight className="w-4 h-4 text-red-400" />
+              </div>
+            </div>
+          </section>
 
+          <section className="grid gap-8 lg:grid-cols-2">
+            {visibleHackathons.map((hack) => (
+              <motion.div
+                key={hack.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="card"
+                style={{
+                  '--primary': '#000000',
+                  '--secondary': '#ff0000',
+                  '--secondary-hover': '#cc0000',
+                  '--accent': '#ff0000',
+                  '--text': '#000000',
+                  '--bg': '#ffffff',
+                  '--shadow-color': '#000000',
+                  '--pattern-color': '#d9d9d9'
+                }}
+              >
+                <div className="card-pattern-grid" />
+                <div className="card-overlay-dots" />
+
+                <div className="bold-pattern">
+                  <svg viewBox="0 0 100 100">
+                    <path
+                      strokeDasharray="15 10"
+                      strokeWidth="10"
+                      stroke="#000"
+                      fill="none"
+                      d="M0,0 L100,0 L100,100 L0,100 Z"
+                    />
+                  </svg>
+                </div>
+
+                <div className="card-title-area">
+                  <span>{hack.title}</span>
+                  <span className="card-tag">{hack.status.toUpperCase()}</span>
+                </div>
+
+                <div className="card-body">
+                  <div className="card-description">{hack.description}</div>
+
+                  <div className="feature-grid">
+                    <div className="feature-item">
+                      <div className="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                          <path d="M20,4C21.1,4 22,4.9 22,6V18C22,19.1 21.1,20 20,20H4C2.9,20 2,19.1 2,18V6C2,4.9 2.9,4 4,4H20M4,6V18H20V6H4M6,9H18V11H6V9M6,13H16V15H6V13Z" />
+                        </svg>
+                      </div>
+                      <span className="feature-text">UI/UX Design</span>
+                    </div>
+                    <div className="feature-item">
+                      <div className="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                          <path d="M12,17.56L16.07,16.43L16.62,10.33H9.38L9.2,8.3H16.8L17,6.31H7L7.56,12.32H14.45L14.22,14.9L12,15.5L9.78,14.9L9.64,13.24H7.64L7.93,16.43L12,17.56M4.07,3H19.93L18.5,19.2L12,21L5.5,19.2L4.07,3Z" />
+                        </svg>
+                      </div>
+                      <span className="feature-text">Development</span>
+                    </div>
+                    <div className="feature-item">
+                      <div className="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                          <path d="M18.5,4L19.66,8.35L18.7,8.61C18.25,7.74 17.79,6.87 17.26,6.43C16.73,6 16.11,6 15.5,6H13V16.5C13,17 13,17.5 13.33,17.75C13.67,18 14.33,18 15,18V19H9V18C9.67,18 10.33,18 10.67,17.75C11,17.5 11,17 11,16.5V6H8.5C7.89,6 7.27,6 6.74,6.43C6.21,6.87 5.75,7.74 5.3,8.61L4.34,8.35L5.5,4H18.5Z" />
+                        </svg>
+                      </div>
+                      <span className="feature-text">Brand Identity</span>
+                    </div>
+                    <div className="feature-item">
+                      <div className="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                          <path d="M9.19,6.35C8.41,7.13 7.75,8.05 7.25,9H5V11H7.12C7.05,11.32 7,11.66 7,12C7,12.34 7.05,12.68 7.12,13H5V15H7.25C7.75,15.95 8.41,16.87 9.19,17.65L7.77,19.07L9.88,21.18L11.3,19.77C11.85,20.03 12.41,20.2 13,20.31V23H15V20.31C15.59,20.2 16.15,20.03 16.7,19.77L18.12,21.18L20.23,19.07L18.81,17.65C19.59,16.87 20.25,15.95 20.75,15H23V13H20.88C20.95,12.68 21,12.34 21,12C21,11.66 20.95,11.32 20.88,11H23V9H20.75C20.25,8.05 19.59,7.13 18.81,6.35L20.23,4.93L18.12,2.82L16.7,4.23C16.15,3.97 15.59,3.8 15,3.69V1H13V3.69C12.41,3.8 11.85,3.97 11.3,4.23L9.88,2.82L7.77,4.93L9.19,6.35M13,17A5,5 0 0,1 8,12A5,5 0 0,1 13,7A5,5 0 0,1 18,12A5,5 0 0,1 13,17Z" />
+                        </svg>
+                      </div>
+                      <span className="feature-text">Marketing</span>
+                    </div>
+                  </div>
+
+                  <div className="card-actions">
+                    <div className="price">
+                      <span className="price-currency">$</span>{hack.prizeAmount}
+                      <span className="price-period">per project</span>
+                    </div>
+                    <button className="card-button">Join Now</button>
+                  </div>
+                </div>
+
+                <div className="dots-pattern">
+                  <svg viewBox="0 0 80 40">
+                    <circle fill="#000" r="3" cy="10" cx="10" />
+                    <circle fill="#000" r="3" cy="10" cx="30" />
+                    <circle fill="#000" r="3" cy="10" cx="50" />
+                    <circle fill="#000" r="3" cy="10" cx="70" />
+                    <circle fill="#000" r="3" cy="20" cx="20" />
+                    <circle fill="#000" r="3" cy="20" cx="40" />
+                    <circle fill="#000" r="3" cy="20" cx="60" />
+                    <circle fill="#000" r="3" cy="30" cx="10" />
+                    <circle fill="#000" r="3" cy="30" cx="30" />
+                    <circle fill="#000" r="3" cy="30" cx="50" />
+                    <circle fill="#000" r="3" cy="30" cx="70" />
+                  </svg>
+                </div>
+
+                <div className="accent-shape" />
+                <div className="corner-slice" />
+                <div className="stamp">
+                  <span className="stamp-text">Live</span>
+                </div>
+              </motion.div>
+            ))}
+          </section>
+
+          {visibleHackathons.length === 0 && (
+            <div className="rounded-[2rem] border-2 border-red-500 bg-white/5 p-10 text-center text-sm font-black uppercase tracking-[0.18em] text-slate-300">
+              No hackathons matched your search.
+            </div>
+          )}
         </div>
       </main>
     </div>
